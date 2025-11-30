@@ -10,10 +10,11 @@ export default function AddExpenseForm({
     const [form, setForm] = useState({
         title: "",
         price: "",
-        category: "Food",
+        category: "Food", // IMPORTANT: Label not value
         date: "",
     });
 
+    // Pre-fill for edit mode
     useEffect(() => {
         if (initialData) {
             setForm(initialData);
@@ -27,10 +28,17 @@ export default function AddExpenseForm({
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        const expense = {
+            title: form.title.trim(),
+            price: Number(form.price),
+            category: form.category, // ALWAYS "Food" | "Travel" | "Entertainment"
+            date: form.date,
+        };
+
         if (editIndex !== null) {
-            onUpdateExpense(form, editIndex);
+            onUpdateExpense(expense, editIndex);
         } else {
-            onAddExpense(form);
+            onAddExpense(expense);
         }
     };
 
@@ -60,11 +68,13 @@ export default function AddExpenseForm({
                     required
                 />
 
+                {/* THIS FIXES CYPRESS CATEGORY TESTS */}
                 <select
                     name="category"
                     value={form.category}
                     onChange={handleChange}
                     className="p-2 border rounded"
+                    required
                 >
                     <option>Food</option>
                     <option>Entertainment</option>
