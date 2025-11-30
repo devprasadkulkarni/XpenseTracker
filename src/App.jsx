@@ -1,23 +1,24 @@
+import React from "react";
 import WalletBalance from "./components/WalletBalance";
 import Expenses from "./components/Expenses";
-import ExpenseSummary from "./components/ExpenseSummary";
+import { SnackbarProvider } from "notistack";
 
-const App = () => {
+export default function App() {
     return (
-        <div className="px-10 bg-gray-800 text-white h-screen">
-            <h1 className="text-4xl font-bold py-4">Expense Tracker</h1>
-            <header className="rounded-xl p-10 bg-gray-700">
-                <section className="grid grid-cols-3 gap-4 justify-center text-center ">
+        <SnackbarProvider
+            maxSnack={3}
+            autoHideDuration={2500}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+            <div className="min-h-screen p-6 bg-gray-100">
+                <h1 className="text-5xl font-bold text-center mb-8">
+                    Expense Tracker
+                </h1>
+                <div className="grid md:grid-cols-2 gap-6">
                     <WalletBalance />
                     <Expenses />
-                    <ExpenseSummary />
-                </section>
-            </header>
-            <main>
-                <h2 className="text-4xl font-bold py-4">Recent Transactions</h2>
-            </main>
-        </div>
+                </div>
+            </div>
+        </SnackbarProvider>
     );
-};
-
-export default App;
+}

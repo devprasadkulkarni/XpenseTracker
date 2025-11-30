@@ -1,37 +1,31 @@
 import React from "react";
 
-const Card = ({
+export default function Card({
     cardName,
     cardValue,
     buttonText,
     toggleAddIncome,
     toggleAddExpense,
-}) => {
-    const handleClick = () => {
-        if (buttonText.includes("Income") && toggleAddIncome) {
-            toggleAddIncome();
-        } else if (buttonText.includes("Expense") && toggleAddExpense) {
+}) {
+    const onClick = () => {
+        if (buttonText.includes("Income") && toggleAddIncome) toggleAddIncome();
+        if (buttonText.includes("Expense") && toggleAddExpense)
             toggleAddExpense();
-        }
     };
 
-    const handleColor = () => {
-        return buttonText.includes("Income") ? "bg-green-500" : "bg-red-500";
-    };
+    const color = buttonText.includes("Income") ? "bg-green-500" : "bg-red-500";
 
     return (
-        <div className="h-72 flex flex-col justify-center gap-4 bg-gray-500 rounded-xl">
-            <h4 className="text-4xl">
+        <div className="h-72 flex flex-col justify-center gap-4 bg-white rounded-xl p-6 shadow">
+            <h4 className="text-3xl">
                 {cardName} : {cardValue}
             </h4>
             <button
-                onClick={handleClick}
-                className={`px-2 py-2 ${handleColor()} text-white rounded-xl mx-52 cursor-pointer`}
+                onClick={onClick}
+                className={`px-3 py-2 ${color} text-white rounded self-start`}
             >
                 {buttonText}
             </button>
         </div>
     );
-};
-
-export default Card;
+}
