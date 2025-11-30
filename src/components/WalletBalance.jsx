@@ -1,35 +1,77 @@
-import { useState, useEffect } from "react";
+// WalletBalance.jsx
+import React, { useState, useEffect, useCallback } from "react";
 import Card from "./Card";
-import Modal from "react-modal"; // ✅ FIXED: import Modal
+import Modal from "react-modal";
 
-Modal.setAppElement("#root"); // ✅ must come after import
+Modal.setAppElement("#root");
 
 export default function WalletBalance() {
-    const [income, setIncome] = useState(() => {
+    // baseIncome is the amount stored (initially 5000)
+    const [baseIncome, setBaseIncome] = useState(() => {
         const raw = localStorage.getItem("income");
         return raw ? Number(raw) : 5000;
     });
 
+    // displayed balance = baseIncome - totalExpenses
+    const [balance, setBalance] = useState(() => {
+        const expensesRaw = localStorage.getItem("expenses");
+        const totalExp = expensesRaw
+            ? JSON.parse(expensesRaw).reduce(
+                  (s, e) => s + Number(e.price || 0),
+                  0
+              )
+            : 0;
+        const raw = localStorage.getItem("income");
+        const base = raw ? Number(raw) : 5000;
+        return base - totalExp;
+    });
+
     const [showAddIncome, setShowAddIncome] = useState(false);
 
+    // Recompute balance from storage (called after expenses change or income change)
+    const recomputeBalance = useCallback(() => {
+        const expensesRaw = localStorage.getItem("expenses");
+        const totalExp = expensesRaw
+            ? JSON.parse(expensesRaw).reduce(
+                  (s, e) => s + Number(e.price || 0),
+                  0
+              )
+            : 0;
+        const raw = localStorage.getItem("income");
+        const base = raw ? Number(raw) : 5000;
+        setBaseIncome(base);
+        setBalance(base - totalExp);
+    }, []);
+
+    // Listen to a custom event dispatched by Expenses whenever it updates localStorage
     useEffect(() => {
-        localStorage.setItem("income", String(income));
-    }, [income]);
+        window.addEventListener("expensesUpdated", recomputeBalance);
+        return () =>
+            window.removeEventListener("expensesUpdated", recomputeBalance);
+    }, [recomputeBalance]);
+
+    // Keep localStorage in sync when baseIncome changes (and recalc)
+    useEffect(() => {
+        localStorage.setItem("income", String(baseIncome));
+        recomputeBalance();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [baseIncome]);
 
     const toggleAddIncome = () => setShowAddIncome((prev) => !prev);
 
     const handleAddIncome = (value) => {
         const num = Number(value);
         if (isNaN(num) || num <= 0) return;
-        setIncome((prev) => prev + num);
+        setBaseIncome((prev) => prev + num);
         setShowAddIncome(false);
+        // recomputeBalance() will run from the baseIncome effect
     };
 
     return (
         <div>
             <Card
                 cardName="Wallet Balance"
-                cardValue={`₹ ${income}`}
+                cardValue={`₹ ${balance}`}
                 buttonText="+ Add Income"
                 toggleAddIncome={toggleAddIncome}
             />
@@ -42,7 +84,6 @@ export default function WalletBalance() {
                 overlayClassName="fixed inset-0 bg-black/40 flex items-start justify-center"
             >
                 <h2 className="text-2xl font-bold mb-4">Add Balance</h2>
-
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
@@ -67,7 +108,6 @@ export default function WalletBalance() {
                         >
                             Add Balance
                         </button>
-
                         <button
                             type="button"
                             onClick={toggleAddIncome}

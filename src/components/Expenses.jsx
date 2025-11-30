@@ -1,3 +1,4 @@
+// Expenses.jsx
 import React, { useState, useEffect } from "react";
 import Card from "./Card";
 import Modal from "react-modal";
@@ -16,31 +17,36 @@ export default function Expenses() {
     const [showAddExpense, setShowAddExpense] = useState(false);
     const [editingIndex, setEditingIndex] = useState(null);
 
-    useEffect(() => {
-        localStorage.setItem("expenses", JSON.stringify(expenses));
-    }, [expenses]);
+    // helper that saves to state and localStorage and notifies wallet
+    const persistExpenses = (next) => {
+        setExpenses(next);
+        localStorage.setItem("expenses", JSON.stringify(next));
+        // notify WalletBalance (and any other listeners) that expenses changed
+        window.dispatchEvent(new Event("expensesUpdated"));
+    };
 
     const toggleAddExpense = () => {
-        setEditingIndex(null); // Close edit mode
+        setEditingIndex(null);
         setShowAddExpense((prev) => !prev);
     };
 
     const addExpense = (expense) => {
-        setExpenses((prev) => [...prev, expense]);
+        const next = [...expenses, expense];
+        persistExpenses(next);
         setShowAddExpense(false);
     };
 
     const updateExpense = (updated, index) => {
-        const updatedList = [...expenses];
-        updatedList[index] = updated;
-        setExpenses(updatedList);
+        const next = expenses.slice();
+        next[index] = updated;
+        persistExpenses(next);
         setShowAddExpense(false);
         setEditingIndex(null);
     };
 
     const deleteExpense = (index) => {
-        const filtered = expenses.filter((_, i) => i !== index);
-        setExpenses(filtered);
+        const next = expenses.filter((_, i) => i !== index);
+        persistExpenses(next);
     };
 
     const handleEdit = (index) => {
@@ -53,6 +59,13 @@ export default function Expenses() {
         0
     );
 
+    // ensure wallet is correct on mount (in case expenses exist already)
+    useEffect(() => {
+        // notify once on mount so WalletBalance picks up initial state
+        window.dispatchEvent(new Event("expensesUpdated"));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     return (
         <div>
             <Card
@@ -62,7 +75,6 @@ export default function Expenses() {
                 toggleAddExpense={toggleAddExpense}
             />
 
-            {/* Add / Edit Modal */}
             <Modal
                 isOpen={showAddExpense}
                 onRequestClose={toggleAddExpense}
